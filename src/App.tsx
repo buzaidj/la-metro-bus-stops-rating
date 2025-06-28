@@ -86,6 +86,7 @@ function App() {
         }
       }).then(
           data => {data.json().then(d => {
+            console.log(d);
             if ('stops' in d){
               setStopData(d.stops[0]); 
             } else {

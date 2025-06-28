@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { uuidv4 } from "@firebase/util";
 import Cookies from 'js-cookie';
-import { doc, getDoc, setDoc, GeoPoint } from "firebase/firestore"; 
+import { doc, getDoc, setDoc, GeoPoint, getDocs, collection } from "firebase/firestore"; 
 import { ref, push, set, get } from "firebase/database";
 import { db, realtimeDb } from "./firebase";
 import { getStops, parseRawStopValue, randElementData } from "./stop_helpers";
@@ -76,7 +76,6 @@ export async function getReviewFromDatabase(stopId: string) : Promise<{
     summedReviews: Array<number>,
 }>{
     const docRef = doc(db, FIRESTORE_COLLECTION + '/' + stopId);
-
     const docData = (await getDoc(docRef)).data();
     const allReviews = docData?.reviews as DBReviews | undefined;
 
@@ -95,6 +94,25 @@ export async function getReviewFromDatabase(stopId: string) : Promise<{
     }
 
     
+}
+
+export async function getAllNonSkippedReviews() {
+
+    const allDocs = await getDocs(collection(db,FIRESTORE_COLLECTION))
+    const results : Array<{id: string, data: any}> = []
+    allDocs.forEach((doc) => {
+        const toAdd = {
+            id: doc.id,
+            data: doc.data(),
+        }
+
+        console.log(toAdd);
+        
+        results.push(toAdd)
+    })
+    
+    console.log(allDocs);
+    return allDocs;
 }
 
 export async function addReviewToDatabase(review: {
