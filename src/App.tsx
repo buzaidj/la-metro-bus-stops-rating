@@ -12,8 +12,6 @@ import { StopValue, findStopId, getStops } from './stop_helpers'
 import { addReviewToDatabase, getRandomStopForReview } from './db_layer'
 
 
-// const getDataForStopId = httpsCallable(, 'retrieveStopId');
-
 function App() {
   const stopLines = getStops();
 
@@ -79,29 +77,30 @@ function App() {
 
   const [stopData, setStopData] = useState<any | 'loading'>('loading');
   useEffect(() => {
-    if (stopValue) {
-      fetch('https://transit.land/api/v2/rest/stops/' + stopValue.id, {
-        headers: {
-          apikey: 'API_KEY'
-        }
-      }).then(
-          data => {data.json().then(d => {
-            console.log(d);
-            if ('stops' in d){
-              setStopData(d.stops[0]); 
-            } else {
-              setStopData({
-                stop_name: stopValue.id,
-                route_stops: [],
-              });
-              console.error(d);
-            }
-          })}
-      ).catch(
-        err => {console.error(err); alert(err.message)}
-      )
+    async function fetchStopAndRoutes() {
+      if (!stopValue) return;
+
+      setStopData('loading');
+
+      const API_KEY = 'MY_TRANSIT_LAND_API_KEY_HERE';
+
+      try {
+        const stopRes = await fetch(`https://transit.land/api/v2/rest/stops/${stopValue.id}`, {
+          headers: { apikey: API_KEY }
+        });
+        const stopJson = await stopRes.json();
+
+        const stopInfo = stopJson.stops?.[0] ?? { stop_name: stopValue.id };
+
+        setStopData(stopInfo);
+      } catch (err: any) {
+        console.error(err);
+        alert('Error fetching stop or routes: ' + err.message);
+      }
     }
-  }, [stopValue])
+    fetchStopAndRoutes();
+  }, [stopValue]);
+
 
   const embedUrl = 'https://www.google.com/maps/embed' 
     + '?pb=' 
@@ -167,9 +166,12 @@ function App() {
               <img src={logo} alt={'LA Metro'} style={{maxWidth: '70px', marginLeft: '10px'}}/>
             </div>
             <p style={{marginBottom: '0px', marginTop: '10px'}}><span style={{fontWeight: 'bold'}}>Current stop: </span>{stopData === 'loading' ? 'Loading...' : stopData.stop_name}</p>
-            <p style={{marginBottom: '0px', marginTop: '5px'}}><span style={{fontWeight: 'bold'}}>Routes served: </span>{
-              stopData === 'loading' ? 'Loading...' : stopData.route_stops.map((x : any) => { return x.route.route_short_name || x.route.route_long_name}).join(', ')
-            }</p>
+            {
+                // this data doesn't seem to get returned by the API anymore :(
+            }
+            {/* <p style={{marginBottom: '0px', marginTop: '5px'}}><span style={{fontWeight: 'bold'}}>Routes served: </span>{
+              stopData === 'loading' ? 'Loading...' : stopData.route_stops?.map((x : any) => { return x.route_short_name || x.route_long_name}).join(', ')
+            }</p> */}
           </div>
           <p></p>
         </div>
@@ -197,7 +199,6 @@ function App() {
           <div style={{display: 'flex', flexDirection: 'row', marginBottom: '1.5em'}}>
             <label style={{fontWeight: 'bold', display:'flex', flexDirection: 'column', alignItems: 'start'}}>(Optional) Leave a comment<input ref={commentRef} style={{width: '90vw', height: '1.5em'}} onChange={(event) => setStopComment(event.target.value)} type='text'/></label>
           </div>
-          {/* <hr style={{height: '1px', backgroundColor: '#aaa', border: 'none', marginLeft: '5px', marginRight: '5px'}} /> */}
         </div>
         <div style={{flexGrow: '1'}}></div>
         <div style={{display: 'flex', bottom: '0', marginLeft: '5px', marginRight: '5px', minWidth: '90%', width: '100vw', backgroundColor: '#f5f5f5', boxShadow: '0px 0px 8px #bbb', backdropFilter: 'blur(2px)', justifyContent: 'center', alignItems: 'center', paddingBottom: '2%', paddingTop: '1.5%', borderTopLeftRadius: '4%', borderTopRightRadius: '4%'}}>
