@@ -97,24 +97,45 @@ export async function getReviewFromDatabase(stopId: string) : Promise<{
 }
 
 export async function getAllNonSkippedReviews() {
-
-    const allDocs = await getDocs(collection(db,FIRESTORE_COLLECTION))
-    const results : Array<{id: string, data: any}> = []
-    allDocs.forEach((doc) => {
-        const toAdd = {
-            id: doc.id,
-            data: doc.data(),
+    const allDocs = await getDocs(collection(db, FIRESTORE_COLLECTION));
+  
+    const results: Array<{
+      stop_id: string;
+      review_id: string;
+      hasSeating: boolean;
+      hasShade: boolean;
+      hasShelter: boolean;
+      hasNoSign: boolean;
+      hasMissingBlockedSidewalk: boolean;
+      hasDirtyUnpleasantWaitingArea: boolean;
+      rating: 'good' | 'meh' | 'bad' | null;
+    }> = [];
+  
+    allDocs.forEach((docSnap) => {
+      const stop_id = docSnap.id;
+      const data = docSnap.data();
+      const reviews = data.reviews ?? {};
+  
+      Object.entries(reviews).forEach(([review_id, review]: [string, any]) => {
+        if (!review.skipped && Array.isArray(review.answers)) {
+          results.push({
+            stop_id,
+            review_id,
+            hasSeating: Boolean(review.answers[0]),
+            hasShade: Boolean(review.answers[1]),
+            hasShelter: Boolean(review.answers[2]),
+            hasNoSign: Boolean(review.answers[3]),
+            hasMissingBlockedSidewalk: Boolean(review.answers[4]),
+            hasDirtyUnpleasantWaitingArea: Boolean(review.answers[5]),
+            rating: review.rating ?? null,
+          });
         }
-
-        console.log(toAdd);
-        
-        results.push(toAdd)
-    })
-    
-    console.log(allDocs);
-    return allDocs;
-}
-
+      });
+    });
+  
+    return results;
+  }
+  
 export async function addReviewToDatabase(review: {
         isSkipped: true,
         stopId: string,
