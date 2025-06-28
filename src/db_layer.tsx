@@ -118,12 +118,13 @@ export async function getAllNonSkippedReviews() {
   
       Object.entries(reviews).forEach(([review_id, review]: [string, any]) => {
         if (!review.skipped && Array.isArray(review.answers)) {
+          console.log(review);
           results.push({
             stop_id,
             review_id,
             hasSeating: Boolean(review.answers[0]),
-            hasShade: Boolean(review.answers[1]),
-            hasShelter: Boolean(review.answers[2]),
+            hasShelter: Boolean(review.answers[1]),
+            hasShade: Boolean(review.answers[2]),
             hasNoSign: Boolean(review.answers[3]),
             hasMissingBlockedSidewalk: Boolean(review.answers[4]),
             hasDirtyUnpleasantWaitingArea: Boolean(review.answers[5]),
@@ -135,7 +136,7 @@ export async function getAllNonSkippedReviews() {
   
     return results;
   }
-  
+
 export async function addReviewToDatabase(review: {
         isSkipped: true,
         stopId: string,

@@ -82,7 +82,7 @@ function App() {
 
       setStopData('loading');
 
-      const API_KEY = 'API_KEY';
+      const API_KEY = 'api-key';
 
       try {
         const stopRes = await fetch(`https://transit.land/api/v2/rest/stops/${stopValue.id}`, {
